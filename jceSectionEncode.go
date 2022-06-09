@@ -64,7 +64,7 @@ func jceSectionStringToBytes(jceId uint8, data string) []byte { //jceType=6 or 7
 	return jceSectionString4ToBytes(jceId, dataByte)
 }
 
-func jceSectionMapStrStrToBytes(jceId uint8, data map[string]string) []byte { //jceType=8
+func JceSectionMapStrStrToBytes(jceId uint8, data map[string]string) []byte { //jceType=8
 	buffer := new(bytes.Buffer)
 	buffer.Write(encodeHeadByte(jceId, 8))
 	if data == nil {
@@ -79,7 +79,7 @@ func jceSectionMapStrStrToBytes(jceId uint8, data map[string]string) []byte { //
 	return buffer.Bytes()
 }
 
-func jceSectionMapStrBytesToBytes(jceId uint8, data map[string][]byte) []byte { //jceType=8
+func JceSectionMapStrBytesToBytes(jceId uint8, data map[string][]byte) []byte { //jceType=8
 	buffer := new(bytes.Buffer)
 	buffer.Write(encodeHeadByte(jceId, 8))
 	if data == nil {
@@ -94,7 +94,7 @@ func jceSectionMapStrBytesToBytes(jceId uint8, data map[string][]byte) []byte { 
 	return buffer.Bytes()
 }
 
-func jceSectionMapStrMapStrBytesToBytes(jceId uint8, data map[string]map[string][]byte) []byte { //jceType=8
+func JceSectionMapStrMapStrBytesToBytes(jceId uint8, data map[string]map[string][]byte) []byte { //jceType=8
 	buffer := new(bytes.Buffer)
 	buffer.Write(encodeHeadByte(jceId, 8))
 	if data == nil {
@@ -104,7 +104,7 @@ func jceSectionMapStrMapStrBytesToBytes(jceId uint8, data map[string]map[string]
 	buffer.Write(jceSectionInt32ToBytes(0, int32(len(data))))
 	for key, value := range data {
 		buffer.Write(jceSectionStringToBytes(0, key))
-		buffer.Write(jceSectionMapStrBytesToBytes(1, value))
+		buffer.Write(JceSectionMapStrBytesToBytes(1, value))
 	}
 	return buffer.Bytes()
 }
@@ -180,11 +180,11 @@ func (jceSection JceSection) Encode(jceId uint8) ([]byte, error) {
 		} else if jceSection.JceType == STRING {
 			return jceSectionStringToBytes(jceId, jceSection.Data.(string)), nil
 		} else if jceSection.JceType == MAPStrStr {
-			return jceSectionMapStrStrToBytes(jceId, jceSection.Data.(map[string]string)), nil
+			return JceSectionMapStrStrToBytes(jceId, jceSection.Data.(map[string]string)), nil
 		} else if jceSection.JceType == MAPStrBytes {
-			return jceSectionMapStrBytesToBytes(jceId, jceSection.Data.(map[string][]byte)), nil
+			return JceSectionMapStrBytesToBytes(jceId, jceSection.Data.(map[string][]byte)), nil
 		} else if jceSection.JceType == MAPStrMAPStrBytes {
-			return jceSectionMapStrMapStrBytesToBytes(jceId, jceSection.Data.(map[string]map[string][]byte)), nil
+			return JceSectionMapStrMapStrBytesToBytes(jceId, jceSection.Data.(map[string]map[string][]byte)), nil
 		} else if jceSection.JceType == LISTInt64 {
 			return jceSectionListInt64ToBytes(jceId, jceSection.Data.([]int64)), nil
 		} else if jceSection.JceType == LISTBytes {

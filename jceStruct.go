@@ -1,6 +1,7 @@
 package gojce
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -41,63 +42,54 @@ func Marshal(vStruct interface{}) (*JceStruct, error) {
 		if err != nil {
 			return nil, err
 		}
-		if fieldType.Type.String() == reflect.Uint8.String() {
+		fieldTypeString := fieldType.Type.String()
+		if fieldTypeString == reflect.Uint8.String() {
 			jceSectionType = BYTE
 			jceSectionData = byte(valueOfvStruct.FieldByName(fieldType.Name).Uint())
-		} else if fieldType.Type.String() == reflect.Int8.String() {
+		} else if fieldTypeString == reflect.Int8.String() {
 			jceSectionType = INT8
 			jceSectionData = int8(valueOfvStruct.FieldByName(fieldType.Name).Int())
-		} else if fieldType.Type.String() == reflect.Int16.String() {
+		} else if fieldTypeString == reflect.Int16.String() {
 			jceSectionType = INT16
 			jceSectionData = int16(valueOfvStruct.FieldByName(fieldType.Name).Int())
-		} else if fieldType.Type.String() == reflect.Int32.String() {
+		} else if fieldTypeString == reflect.Int32.String() {
 			jceSectionType = INT32
 			jceSectionData = int32(valueOfvStruct.FieldByName(fieldType.Name).Int())
-		} else if fieldType.Type.String() == reflect.Int64.String() {
+		} else if fieldTypeString == reflect.Int64.String() {
 			jceSectionType = INT64
 			jceSectionData = int64(valueOfvStruct.FieldByName(fieldType.Name).Int())
-		} else if fieldType.Type.String() == reflect.Float32.String() {
+		} else if fieldTypeString == reflect.Float32.String() {
 			jceSectionType = FLOAT32
 			jceSectionData = float32(valueOfvStruct.FieldByName(fieldType.Name).Float())
-		} else if fieldType.Type.String() == reflect.Float64.String() {
+		} else if fieldTypeString == reflect.Float64.String() {
 			jceSectionType = FLOAT64
 			jceSectionData = float64(valueOfvStruct.FieldByName(fieldType.Name).Float())
-		} else if fieldType.Type.String() == reflect.String.String() {
+		} else if fieldTypeString == reflect.String.String() {
 			jceSectionType = STRING
 			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).String()
-		} else if fieldType.Type.String() == reflect.Bool.String() {
+		} else if fieldTypeString == "[]uint8" {
+			jceSectionType = BYTES
+			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).Interface()
+		} else if fieldTypeString == reflect.Bool.String() {
 			jceSectionType = BOOL
 			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).Bool()
-		} else if fieldType.Type.String() == reflect.Map.String() {
-			if fieldType.Type.Key().String() != reflect.String.String() {
-				return nil, ErrorJceMapInnerTypeErr
-			}
-			if fieldType.Type.Elem().String() == reflect.String.String() {
-				jceSectionType = MAPStrStr
-			} else if fieldType.Type.Elem().String() == reflect.Slice.String() && fieldType.Type.Elem().Elem().String() == reflect.Uint8.String() {
-				jceSectionType = MAPStrBytes
-			} else if fieldType.Type.Elem().String() == reflect.Map.String() {
-				if fieldType.Type.Elem().Key().String() != reflect.String.String() {
-					return nil, ErrorJceMapInnerTypeErr
-				}
-				if fieldType.Type.Elem().Elem().String() != reflect.Slice.String() || fieldType.Type.Elem().Elem().Elem().String() != reflect.Uint8.String() {
-					return nil, ErrorJceMapInnerTypeErr
-				}
-				jceSectionType = MAPStrMAPStrBytes
-			} else {
-				return nil, ErrorJceMapInnerTypeErr
-			}
+		} else if fieldTypeString == "map[string]string" {
+			jceSectionType = MAPStrStr
 			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).Interface()
-		} else if fieldType.Type.String() == reflect.Slice.String() {
-			if fieldType.Type.Elem().String() == reflect.Int64.String() {
-				jceSectionType = LISTInt64
-			} else if fieldType.Type.Elem().String() == reflect.Uint8.String() {
-				jceSectionType = LISTBytes
-			} else {
-				return nil, ErrorJceListInnerTypeErr
-			}
+		} else if fieldTypeString == "map[string][]uint8" {
+			jceSectionType = MAPStrBytes
+			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).Interface()
+		} else if fieldTypeString == "map[string]map[string]uint8" {
+			jceSectionType = MAPStrMAPStrBytes
+			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).Interface()
+		} else if fieldTypeString == "[]int64" {
+			jceSectionType = LISTInt64
+			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).Interface()
+		} else if fieldTypeString == "[][]uint8" {
+			jceSectionType = LISTBytes
 			jceSectionData = valueOfvStruct.FieldByName(fieldType.Name).Interface()
 		} else {
+			fmt.Println(fieldTypeString)
 			return nil, ErrorUnknowJceTypeErr
 		}
 		jceStruct.SetSection(uint8(jceId), JceSection{JceType: jceSectionType, Data: jceSectionData})
