@@ -40,7 +40,7 @@ func Float32ToByte(float float32) []byte {
 	return Int32ToBytes(int32(bits))
 }
 
-func ByteToFloat32(bytes []byte) float32 {
+func BytesToFloat32(bytes []byte) float32 {
 	return math.Float32frombits(uint32(BytesToInt32(bytes)))
 }
 
@@ -49,6 +49,6 @@ func Float64ToByte(float float64) []byte {
 	return Int64ToBytes(int64(bits))
 }
 
-func ByteToFloat64(bytes []byte) float64 {
+func BytesToFloat64(bytes []byte) float64 {
 	return math.Float64frombits(uint64(BytesToInt64(bytes)))
 }

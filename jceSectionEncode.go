@@ -18,14 +18,29 @@ func jceSectionByteToBytes(jceId uint8, data uint8) []byte { //jceType=0
 }
 
 func jceSectionInt16ToBytes(jceId uint8, data int16) []byte { //jceType=1
+	if -128 <= data && data <= 127 {
+		return jceSectionInt8ToBytes(jceId, int8(data))
+	}
 	return append(encodeHeadByte(jceId, 1), Int16ToBytes(data)...)
 }
 
 func jceSectionInt32ToBytes(jceId uint8, data int32) []byte { //jceType=2
+	if -128 <= data && data <= 127 {
+		return jceSectionInt8ToBytes(jceId, int8(data))
+	} else if -32768 <= data && data <= 32767 {
+		return jceSectionInt16ToBytes(jceId, int16(data))
+	}
 	return append(encodeHeadByte(jceId, 2), Int32ToBytes(data)...)
 }
 
 func jceSectionInt64ToBytes(jceId uint8, data int64) []byte { //jceType=3
+	if -128 <= data && data <= 127 {
+		return jceSectionInt8ToBytes(jceId, int8(data))
+	} else if -32768 <= data && data <= 32767 {
+		return jceSectionInt16ToBytes(jceId, int16(data))
+	} else if -2147483648 <= data && data <= 2147483647 {
+		return jceSectionInt32ToBytes(jceId, int32(data))
+	}
 	return append(encodeHeadByte(jceId, 3), Int64ToBytes(data)...)
 }
 
@@ -193,6 +208,10 @@ func (jceSection JceSection) Encode(jceId uint8) ([]byte, error) {
 			return jceSectionBoolToBytes(jceId, jceSection.Data.(bool)), nil
 		} else if jceSection.JceType == BYTES {
 			return jceSectionBytesToBytes(jceId, jceSection.Data.([]byte)), nil
+		} else if jceSection.JceType == STRUCT {
+			return jceSection.Data.(*JceStruct).ToBytes(jceId)
+		} else {
+			return nil, ErrorUnknowJceTypeErr
 		}
 	}
 	fmt.Println(jceSection.JceType)

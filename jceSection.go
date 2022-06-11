@@ -9,13 +9,15 @@ const (
 	FLOAT32           = "FLOAT32"
 	FLOAT64           = "FLOAT64"
 	STRING            = "STRING"
+	MAP               = "MAP" //别用, 只会在section解码的时候出现
 	MAPStrStr         = "MAPStrStr"
 	MAPStrBytes       = "MAPStrBytes"
 	MAPStrMAPStrBytes = "MAPStrMAPStrBytes"
+	LIST              = "LIST" //别用, 只会在section解码的时候出现
 	LISTInt64         = "LISTInt64"
 	LISTBytes         = "LISTBytes"
-	STRUCT_START      = "STRUCT_START"
-	STRUCT_END        = "STRUCT_END"
+	STRUCT            = "STRUCT"
+	STRUCT_END        = "STRUCT_END" //别用, 只会在struct解码的时候出现
 	ZERO_TAG          = "ZERO_TAG"
 	BOOL              = "BOOL"
 	BYTES             = "BYTES"
@@ -32,4 +34,13 @@ func encodeHeadByte(jceId uint8, jceType uint8) []byte {
 	} else {
 		return []byte{0xF0 | jceType, jceId}
 	}
+}
+
+func decodeHeadByte(firstHeaderByte byte) (uint8, uint8, bool) { //jceId jceType idInNexByte
+	jceType := uint8(firstHeaderByte & 0x0F)
+	jceId := uint8(firstHeaderByte >> 4)
+	if jceId == 0x0F {
+		return 0, jceType, true
+	}
+	return jceId, jceType, false
 }
