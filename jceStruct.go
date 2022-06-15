@@ -15,19 +15,19 @@ func (jceStruct *JceStruct) SetSection(jceId uint8, jceSection JceSection) {
 }
 
 func (jceStruct *JceStruct) CopyTemplate() *JceStruct {
-	newJceStruct := newJceStruct()
+	newJceStruct := NewJceStruct()
 	for k, v := range jceStruct.structMap {
 		newJceStruct.structMap[k] = v
 	}
 	return newJceStruct
 }
 
-func newJceStruct() *JceStruct {
+func NewJceStruct() *JceStruct {
 	return &JceStruct{make(map[uint8]*JceSection)}
 }
 
 func Marshal(vStruct interface{}) (*JceStruct, error) {
-	jceStruct := newJceStruct()
+	jceStruct := NewJceStruct()
 	typeOfvStruct := reflect.TypeOf(vStruct)
 	valueOfvStruct := reflect.ValueOf(vStruct)
 	var jceSectionType string
@@ -99,7 +99,7 @@ func Marshal(vStruct interface{}) (*JceStruct, error) {
 }
 
 func Unmarshal(data []byte, vStruct interface{}) error {
-	jceStruct := newJceStruct()
+	jceStruct := NewJceStruct()
 	err := jceStruct.Decode(data)
 	if err != nil {
 		return err
@@ -128,6 +128,7 @@ func Bind(jceStruct *JceStruct, vStruct interface{}) error {
 		if jceSection, ok = jceStruct.structMap[uint8(jceId)]; !ok {
 			return ErrorJceStructDoesNotMatch
 		}
+		//fmt.Println(jceSection.JceType, fieldTypeString)
 		if fieldTypeString == reflect.Uint8.String() {
 			if jceSection.JceType == INT8 {
 				valueOfvStruct.Elem().FieldByIndex(fieldType.Index).SetUint(uint64(jceSection.Data.(int8)))

@@ -24,13 +24,13 @@ func jceStructEncode(jceStruct map[uint8]*JceSection) ([]byte, error) {
 
 func jceStructToBytes(jceId uint8, jceStruct map[uint8]*JceSection) ([]byte, error) {
 	buffer := new(bytes.Buffer)
-	buffer.Write(jceSectionStructStartToBytes(jceId))
+	buffer.Write(JceSectionStructStartToBytes(jceId))
 	data, err := jceStructEncode(jceStruct)
 	if err != nil {
 		return nil, err
 	}
 	buffer.Write(data)
-	buffer.Write(jceSectionStructEndToBytes(jceId))
+	buffer.Write(JceSectionStructEndToBytes(jceId))
 	return buffer.Bytes(), nil
 }
 

@@ -28,7 +28,7 @@ type JceSection struct {
 	Data    interface{}
 }
 
-func encodeHeadByte(jceId uint8, jceType uint8) []byte {
+func JceSectionEncodeHeadByte(jceId uint8, jceType uint8) []byte {
 	if jceId < 15 {
 		return []byte{jceId<<4 | jceType}
 	} else {
@@ -36,7 +36,7 @@ func encodeHeadByte(jceId uint8, jceType uint8) []byte {
 	}
 }
 
-func decodeHeadByte(firstHeaderByte byte) (uint8, uint8, bool) { //jceId jceType idInNexByte
+func JceSectionDecodeHeadByte(firstHeaderByte byte) (uint8, uint8, bool) { //jceId jceType idInNexByte
 	jceType := uint8(firstHeaderByte & 0x0F)
 	jceId := uint8(firstHeaderByte >> 4)
 	if jceId == 0x0F {

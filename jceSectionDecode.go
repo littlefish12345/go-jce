@@ -1,483 +1,454 @@
 package gojce
 
-import (
-	"bytes"
-)
-
-func jceSectionType0FromBytes(readBuffer *bytes.Buffer) (string, int8, error) { //jceType=0 int8
-	buffer := make([]byte, 1)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", 0, err
+func JceSectionType0FromBytes(readBuffer *JceReader) int8 { //jceType=0 int8
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 0 {
+		return 0
 	}
-	return INT8, int8(buffer[0]), nil
+	readBuffer.SkipHead()
+	buffer, _ := readBuffer.Read(1)
+	if len(buffer) != 1 {
+		return 0
+	}
+	return int8(buffer[0])
 }
 
-func jceSectionType1FromBytes(readBuffer *bytes.Buffer) (string, int16, error) { //jceType=1 int16
-	buffer := make([]byte, 2)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", 0, err
+func JceSectionType1FromBytes(readBuffer *JceReader) int16 { //jceType=1 int16
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 1 {
+		return 0
 	}
-	return INT16, BytesToInt16(buffer), nil
+	readBuffer.SkipHead()
+	buffer, _ := readBuffer.Read(2)
+	if len(buffer) != 2 {
+		return 0
+	}
+	return BytesToInt16(buffer)
 }
 
-func jceSectionType2FromBytes(readBuffer *bytes.Buffer) (string, int32, error) { //jceType=2 int32
-	buffer := make([]byte, 4)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", 0, err
+func JceSectionType2FromBytes(readBuffer *JceReader) int32 { //jceType=2 int32
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 2 {
+		return 0
 	}
-	return INT32, BytesToInt32(buffer), nil
+	readBuffer.SkipHead()
+	buffer, _ := readBuffer.Read(4)
+	if len(buffer) != 4 {
+		return 0
+	}
+	return BytesToInt32(buffer)
 }
 
-func jceSectionType3FromBytes(readBuffer *bytes.Buffer) (string, int64, error) { //jceType=3 int64
-	buffer := make([]byte, 8)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", 0, err
+func JceSectionType3FromBytes(readBuffer *JceReader) int64 { //jceType=3 int64
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 3 {
+		return 0
 	}
-	return INT64, BytesToInt64(buffer), nil
+	readBuffer.SkipHead()
+	buffer, _ := readBuffer.Read(8)
+	if len(buffer) != 8 {
+		return 0
+	}
+	return BytesToInt64(buffer)
 }
 
-func jceSectionType4FromBytes(readBuffer *bytes.Buffer) (string, float32, error) { //jceType=4 float32
-	buffer := make([]byte, 4)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", 0, err
-	}
-	return FLOAT32, BytesToFloat32(buffer), nil
-}
-
-func jceSectionType5FromBytes(readBuffer *bytes.Buffer) (string, float64, error) { //jceType=5 float64
-	buffer := make([]byte, 8)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", 0, err
-	}
-	return FLOAT64, BytesToFloat64(buffer), nil
-}
-
-func jceSectionType6or7FromBytes(readBuffer *bytes.Buffer, jceType uint8) (string, string, error) { //jceType=6 or 7 string1/4
-	var buffer []byte
-	var length uint64
-	if jceType == 6 {
-		buffer = make([]byte, 1)
-		_, err := readBuffer.Read(buffer)
-		if err != nil {
-			return "", "", err
-		}
-		length = uint64(buffer[0])
-	} else {
-		buffer = make([]byte, 4)
-		_, err := readBuffer.Read(buffer)
-		if err != nil {
-			return "", "", err
-		}
-		length = uint64(BytesToInt64(buffer))
-	}
-	buffer = make([]byte, length)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", "", err
-	}
-	return STRING, string(buffer), nil
-}
-
-func jceSectionType8FromBytes(readBuffer *bytes.Buffer) (string, interface{}, error) { //jceType=8 map
-	buffer := make([]byte, 1)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
-	}
-	_, jceType, _ := decodeHeadByte(buffer[0])
-	var jceSectionData interface{}
-	var length int32
+func JceSectionInt8FromBytes(readBuffer *JceReader) int8 {
+	_, jceType, _ := readBuffer.ReadHead()
 	if jceType == 12 {
-		return MAP, nil, nil
+		return 0
 	} else if jceType == 0 {
-		_, jceSectionData, err = jceSectionType0FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = int32(jceSectionData.(int8))
+		return JceSectionType0FromBytes(readBuffer)
+	}
+	return 0
+}
+
+func JceSectionByteFromBytes(readBuffer *JceReader) byte {
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType == 12 {
+		return 0
+	} else if jceType == 0 {
+		return byte(JceSectionType0FromBytes(readBuffer))
+	}
+	return 0
+}
+
+func JceSectionInt16FromBytes(readBuffer *JceReader) int16 {
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType == 0 {
+		return int16(JceSectionType0FromBytes(readBuffer))
 	} else if jceType == 1 {
-		_, jceSectionData, err = jceSectionType1FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = int32(jceSectionData.(int16))
-	} else if jceType == 2 {
-		_, jceSectionData, err = jceSectionType2FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = jceSectionData.(int32)
-	} else {
-		return "", nil, ErrorUnknowJceTypeErr
-	}
-
-	var returnMap interface{}
-	var innerMapType string
-	var value interface{}
-	mapType := ""
-	_, err = readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
-	}
-	_, jceType, _ = decodeHeadByte(buffer[0])
-	if jceType != 6 && jceType != 7 {
-		return "", nil, ErrorUnknowJceTypeErr
-	}
-	_, key, err := jceSectionType6or7FromBytes(readBuffer, jceType)
-	if err != nil {
-		return "", nil, err
-	}
-
-	_, err = readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
-	}
-	_, jceType, _ = decodeHeadByte(buffer[0])
-	if jceType == 6 || jceType == 7 {
-		returnMap = make(map[string]string)
-		_, value, err = jceSectionType6or7FromBytes(readBuffer, jceType)
-		if err != nil {
-			return "", nil, err
-		}
-		returnMap.(map[string]interface{})[key] = value
-		mapType = MAPStrStr
+		return JceSectionType1FromBytes(readBuffer)
 	} else if jceType == 12 {
-		returnMap = make(map[string][]byte)
-		_, value, err = jceSectionType13FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		returnMap.(map[string]interface{})[key] = value
-		mapType = MAPStrBytes
-	} else if jceType == 8 {
-		returnMap = make(map[string]map[string][]byte)
-		innerMapType, value, err = jceSectionType8FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		if innerMapType != MAPStrBytes {
-			return "", nil, ErrorUnknowJceTypeErr
-		}
-		returnMap.(map[string]interface{})[key] = value
-		mapType = MAPStrMAPStrBytes
+		return 0
 	}
-
-	for i := int32(1); i < length; i++ {
-		_, err = readBuffer.Read(buffer)
-		if err != nil {
-			return "", nil, err
-		}
-		_, jceType, _ = decodeHeadByte(buffer[0])
-		if jceType != 6 && jceType != 7 {
-			return "", nil, ErrorUnknowJceTypeErr
-		}
-		_, key, err = jceSectionType6or7FromBytes(readBuffer, jceType)
-		if err != nil {
-			return "", nil, err
-		}
-
-		_, err = readBuffer.Read(buffer)
-		if err != nil {
-			return "", nil, err
-		}
-		_, jceType, _ = decodeHeadByte(buffer[0])
-		if mapType == MAPStrStr {
-			if jceType != 6 && jceType != 7 {
-				return "", nil, ErrorUnknowJceTypeErr
-			}
-			_, value, err = jceSectionType6or7FromBytes(readBuffer, jceType)
-			if err != nil {
-				return "", nil, err
-			}
-		} else if mapType == MAPStrBytes {
-			if jceType != 12 {
-				return "", nil, ErrorUnknowJceTypeErr
-			}
-			_, value, err = jceSectionType13FromBytes(readBuffer)
-			if err != nil {
-				return "", nil, err
-			}
-		} else {
-			if jceType != 8 {
-				return "", nil, ErrorUnknowJceTypeErr
-			}
-			innerMapType, value, err = jceSectionType8FromBytes(readBuffer)
-			if err != nil {
-				return "", nil, err
-			}
-			if innerMapType != MAPStrBytes {
-				return "", nil, ErrorUnknowJceTypeErr
-			}
-		}
-		returnMap.(map[string]interface{})[key] = value
-	}
-	return mapType, returnMap, nil
+	return 0
 }
 
-func jceSectionType9FromBytes(readBuffer *bytes.Buffer) (string, interface{}, error) { //jceType=9 list
-	buffer := make([]byte, 1)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
-	}
-	_, jceType, _ := decodeHeadByte(buffer[0])
-	var jceSectionData interface{}
-	var length int32
-	if jceType == 12 {
-		return LIST, nil, nil
-	} else if jceType == 0 {
-		_, jceSectionData, err = jceSectionType0FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = int32(jceSectionData.(int8))
+func JceSectionInt32FromBytes(readBuffer *JceReader) int32 {
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType == 0 {
+		return int32(JceSectionType0FromBytes(readBuffer))
 	} else if jceType == 1 {
-		_, jceSectionData, err = jceSectionType1FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = int32(jceSectionData.(int16))
+		return int32(JceSectionType1FromBytes(readBuffer))
 	} else if jceType == 2 {
-		_, jceSectionData, err = jceSectionType2FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = jceSectionData.(int32)
-	} else {
-		return "", nil, ErrorUnknowJceTypeErr
+		return JceSectionType2FromBytes(readBuffer)
+	} else if jceType == 12 {
+		return 0
 	}
+	return 0
+}
 
-	var returnList []interface{}
-	var value interface{}
-	listType := ""
-	_, err = readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
+func JceSectionInt64FromBytes(readBuffer *JceReader) int64 {
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType == 0 {
+		return int64(JceSectionType0FromBytes(readBuffer))
+	} else if jceType == 1 {
+		return int64(JceSectionType1FromBytes(readBuffer))
+	} else if jceType == 2 {
+		return int64(JceSectionType2FromBytes(readBuffer))
+	} else if jceType == 3 {
+		return JceSectionType3FromBytes(readBuffer)
+	} else if jceType == 12 {
+		return 0
 	}
-	_, jceType, _ = decodeHeadByte(buffer[0])
-	if jceType == 0 || jceType == 1 || jceType == 2 || jceType == 3 || jceType == 12 {
-		_, value, err = jceSectionType6or7FromBytes(readBuffer, jceType)
-		if err != nil {
-			return "", nil, err
+	return 0
+}
+
+func JceSectionType4FromBytes(readBuffer *JceReader) float32 { //jceType=4 float32
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 4 {
+		return 0
+	}
+	readBuffer.SkipHead()
+	buffer, _ := readBuffer.Read(4)
+	if len(buffer) != 4 {
+		return 0
+	}
+	return BytesToFloat32(buffer)
+}
+
+func JceSectionType5FromBytes(readBuffer *JceReader) float64 { //jceType=5 float64
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 5 {
+		return 0
+	}
+	readBuffer.SkipHead()
+	buffer, _ := readBuffer.Read(8)
+	if len(buffer) != 8 {
+		return 0
+	}
+	return BytesToFloat64(buffer)
+}
+
+func JceSectionFloat32FromBytes(readBuffer *JceReader) float32 {
+	return JceSectionType4FromBytes(readBuffer)
+}
+
+func JceSectionFloat64FromBytes(readBuffer *JceReader) float64 {
+	return JceSectionType5FromBytes(readBuffer)
+}
+
+func JceSectionType6FromBytes(readBuffer *JceReader) string { //jceType=6 string1
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 6 {
+		return ""
+	}
+	readBuffer.SkipHead()
+	lengthBytes, _ := readBuffer.Read(1)
+	if len(lengthBytes) != 1 {
+		return ""
+	}
+	length := uint64(lengthBytes[0])
+	data, _ := readBuffer.Read(length)
+	if uint64(len(data)) != length {
+		return ""
+	}
+	return string(data)
+}
+
+func JceSectionType7FromBytes(readBuffer *JceReader) string { //jceType=7 string4
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 7 {
+		return ""
+	}
+	readBuffer.SkipHead()
+	lengthBytes, _ := readBuffer.Read(4)
+	if len(lengthBytes) != 4 {
+		return ""
+	}
+	length := uint64(BytesToInt32(lengthBytes))
+	data, _ := readBuffer.Read(length)
+	if uint64(len(data)) != length {
+		return ""
+	}
+	return string(data)
+}
+
+func JceSectionStringFromBytes(readBuffer *JceReader) string {
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType == 6 {
+		return JceSectionType6FromBytes(readBuffer)
+	} else if jceType == 7 {
+		return JceSectionType7FromBytes(readBuffer)
+	}
+	return ""
+}
+
+func JceSectionType8FromBytes(readBuffer *JceReader) (string, map[interface{}]interface{}) { //jceType=8 map
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 8 {
+		return "", nil
+	}
+	readBuffer.SkipHead()
+	length := JceSectionInt32FromBytes(readBuffer)
+	if length == 0 {
+		return MAP, nil
+	}
+	key := JceSectionStringFromBytes(readBuffer)
+	if key == "" {
+		return "", nil
+	}
+	returnMap := make(map[interface{}]interface{})
+	_, jceType, _ = readBuffer.ReadHead()
+	var value interface{}
+	var mapType string
+	if JceTypeIsString(jceType) {
+		mapType = MAPStrStr
+		value = JceSectionStringFromBytes(readBuffer)
+	} else if JceTypeIsBytes(jceType) {
+		mapType = MAPStrBytes
+		value = JceSectionBytesFromBytes(readBuffer)
+	} else if JceTypeIsMap(jceType) {
+		value = JceSectionMapStrBytesFromBytes(readBuffer)
+		if value == nil {
+			return "", nil
 		}
-		if jceType == 0 {
-			_, jceSectionData, err = jceSectionType0FromBytes(readBuffer)
-			if err != nil {
-				return "", nil, err
+		mapType = MAPStrBytes
+	} else {
+		return "", nil
+	}
+	returnMap[key] = value
+	for i := int32(1); i < length; i++ {
+		key = JceSectionStringFromBytes(readBuffer)
+		if key == "" {
+			return "", nil
+		}
+		_, jceType, _ = readBuffer.ReadHead()
+		if JceTypeIsString(jceType) {
+			if mapType != MAPStrStr {
+				return "", nil
 			}
-			value = int64(jceSectionData.(int8))
-		} else if jceType == 1 {
-			_, jceSectionData, err = jceSectionType1FromBytes(readBuffer)
-			if err != nil {
-				return "", nil, err
+			value = JceSectionStringFromBytes(readBuffer)
+		} else if JceTypeIsBytes(jceType) {
+			if mapType != MAPStrBytes {
+				return "", nil
 			}
-			value = int64(jceSectionData.(int16))
-		} else if jceType == 2 {
-			_, jceSectionData, err = jceSectionType2FromBytes(readBuffer)
-			if err != nil {
-				return "", nil, err
+			value = JceSectionBytesFromBytes(readBuffer)
+		} else if JceTypeIsMap(jceType) {
+			if mapType != MAPStrMAPStrBytes {
+				return "", nil
 			}
-			value = int64(jceSectionData.(int32))
-		} else if jceType == 3 {
-			_, jceSectionData, err = jceSectionType3FromBytes(readBuffer)
-			if err != nil {
-				return "", nil, err
+			value = JceSectionMapStrBytesFromBytes(readBuffer)
+			if value == nil {
+				return "", nil
 			}
-			value = int64(jceSectionData.(int64))
 		} else {
-			value = int64(0)
+			return "", nil
 		}
-		returnList = append(returnList, value)
+		returnMap[key] = value
+	}
+	return mapType, returnMap
+}
+
+func JceSectionMapStrStrFromBytes(readBuffer *JceReader) map[string]string {
+	mapType, interfaceMap := JceSectionType8FromBytes(readBuffer)
+	if mapType != MAPStrStr {
+		if mapType == MAP {
+			return make(map[string]string)
+		}
+		return nil
+	}
+	returnMap := make(map[string]string)
+	for k, v := range interfaceMap {
+		returnMap[k.(string)] = v.(string)
+	}
+	return returnMap
+}
+
+func JceSectionMapStrBytesFromBytes(readBuffer *JceReader) map[string][]byte {
+	mapType, interfaceMap := JceSectionType8FromBytes(readBuffer)
+	if mapType != MAPStrBytes {
+		if mapType == MAP {
+			return make(map[string][]byte)
+		}
+		return nil
+	}
+	returnMap := make(map[string][]byte)
+	for k, v := range interfaceMap {
+		returnMap[k.(string)] = v.([]byte)
+	}
+	return returnMap
+}
+
+func JceSectionMapStrMapStrBytesFromBytes(readBuffer *JceReader) map[string]map[string][]byte {
+	mapType, interfaceMap := JceSectionType8FromBytes(readBuffer)
+	if mapType != MAPStrMAPStrBytes {
+		if mapType == MAP {
+			return make(map[string]map[string][]byte)
+		}
+		return nil
+	}
+	returnMap := make(map[string]map[string][]byte)
+	for k, v := range interfaceMap {
+		returnMap[k.(string)] = v.(map[string][]byte)
+	}
+	return returnMap
+}
+
+func JceSectionType9FromBytes(readBuffer *JceReader) (string, []interface{}) { //jceType=9 list
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 9 {
+		return "", nil
+	}
+	readBuffer.SkipHead()
+	length := JceSectionInt32FromBytes(readBuffer)
+	if length == 0 {
+		return LIST, nil
+	}
+	var returnList []interface{}
+	_, jceType, _ = readBuffer.ReadHead()
+	var value interface{}
+	var listType string
+	if JceTypeIsInt64(jceType) {
+		value = JceSectionInt64FromBytes(readBuffer)
 		listType = LISTInt64
-	} else if jceType == 13 {
-		_, value, err = jceSectionType13FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		returnList = append(returnList, value)
+	} else if JceTypeIsBytes(jceType) {
+		value = JceSectionBytesFromBytes(readBuffer)
 		listType = LISTBytes
 	} else {
-		return "", nil, ErrorUnknowJceTypeErr
+		return "", nil
 	}
-
+	returnList = append(returnList, value)
 	for i := int32(1); i < length; i++ {
-		_, err = readBuffer.Read(buffer)
-		if err != nil {
-			return "", nil, err
-		}
-		_, jceType, _ = decodeHeadByte(buffer[0])
-		if listType == LISTInt64 {
-			if jceType != 0 && jceType != 1 && jceType != 2 && jceType != 3 && jceType != 12 {
-				return "", nil, ErrorUnknowJceTypeErr
+		_, jceType, _ = readBuffer.ReadHead()
+		if JceTypeIsInt64(jceType) {
+			if listType != LISTInt64 {
+				return "", nil
 			}
-			if jceType == 0 {
-				_, jceSectionData, err = jceSectionType0FromBytes(readBuffer)
-				if err != nil {
-					return "", nil, err
-				}
-				value = int64(jceSectionData.(int8))
-			} else if jceType == 1 {
-				_, jceSectionData, err = jceSectionType1FromBytes(readBuffer)
-				if err != nil {
-					return "", nil, err
-				}
-				value = int64(jceSectionData.(int16))
-			} else if jceType == 2 {
-				_, jceSectionData, err = jceSectionType2FromBytes(readBuffer)
-				if err != nil {
-					return "", nil, err
-				}
-				value = int64(jceSectionData.(int32))
-			} else if jceType == 3 {
-				_, jceSectionData, err = jceSectionType3FromBytes(readBuffer)
-				if err != nil {
-					return "", nil, err
-				}
-				value = int64(jceSectionData.(int64))
-			} else {
-				value = int64(0)
+			value = JceSectionInt64FromBytes(readBuffer)
+			listType = LISTInt64
+		} else if JceTypeIsBytes(jceType) {
+			if listType != LISTBytes {
+				return "", nil
 			}
+			value = JceSectionBytesFromBytes(readBuffer)
+			listType = LISTBytes
 		} else {
-			if jceType != 13 {
-				return "", nil, ErrorUnknowJceTypeErr
-			}
-			_, value, err = jceSectionType13FromBytes(readBuffer)
-			if err != nil {
-				return "", nil, err
-			}
+			return "", nil
 		}
 		returnList = append(returnList, value)
 	}
-	return listType, returnList, nil
+	return listType, returnList
 }
 
-func jceSectionType13FromBytes(readBuffer *bytes.Buffer) (string, []byte, error) { //jceType=13
-	buffer := make([]byte, 1)
-	_, err := readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
-	}
-	buffer = make([]byte, 1)
-	_, err = readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
-	}
-	_, jceType, _ := decodeHeadByte(buffer[0])
-	var jceSectionData interface{}
-	var length uint32
-	if jceType == 12 {
-		return BYTES, []byte{}, nil
-	} else if jceType == 0 {
-		_, jceSectionData, err = jceSectionType0FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
+func JceSectionListInt64FromBytes(readBuffer *JceReader) []int64 {
+	listType, interfaceList := JceSectionType8FromBytes(readBuffer)
+	if listType != LISTInt64 {
+		if listType == LIST {
+			return []int64{}
 		}
-		length = uint32(jceSectionData.(int8))
-	} else if jceType == 1 {
-		_, jceSectionData, err = jceSectionType1FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = uint32(jceSectionData.(int16))
-	} else if jceType == 2 {
-		_, jceSectionData, err = jceSectionType2FromBytes(readBuffer)
-		if err != nil {
-			return "", nil, err
-		}
-		length = uint32(jceSectionData.(int32))
+		return nil
 	}
-	buffer = make([]byte, length)
-	_, err = readBuffer.Read(buffer)
-	if err != nil {
-		return "", nil, err
+	var returnList []int64
+	for _, v := range interfaceList {
+		returnList = append(returnList, v.(int64))
 	}
-	return BYTES, buffer, nil
+	return returnList
 }
 
-func (jceSection *JceSection) Decode(readBuffer *bytes.Buffer) (uint8, error) {
-	buffer := make([]byte, 1)
-	_, err := readBuffer.Read(buffer)
+func JceSectionListBytesFromBytes(readBuffer *JceReader) [][]byte {
+	listType, interfaceList := JceSectionType8FromBytes(readBuffer)
+	if listType != LISTBytes {
+		if listType == LIST {
+			return [][]byte{}
+		}
+		return nil
+	}
+	var returnList [][]byte
+	for _, v := range interfaceList {
+		returnList = append(returnList, v.([]byte))
+	}
+	return returnList
+}
+
+func JceSectionType13FromBytes(readBuffer *JceReader) []byte { //jceType=13 []byte
+	_, jceType, _ := readBuffer.ReadHead()
+	if jceType != 13 {
+		return nil
+	}
+	readBuffer.SkipHead()
+	readBuffer.SkipHead()
+	length := uint64(JceSectionInt32FromBytes(readBuffer))
+	if length == 0 {
+		return nil
+	}
+	data, _ := readBuffer.Read(length)
+	if uint64(len(data)) != length {
+		return nil
+	}
+	return data
+}
+
+func JceSectionBytesFromBytes(readBuffer *JceReader) []byte {
+	return JceSectionType13FromBytes(readBuffer)
+}
+
+func (jceSection *JceSection) Decode(readBuffer *JceReader) (uint8, error) {
+	jceId, jceType, err := readBuffer.ReadHead()
 	if err != nil {
 		return 0, err
 	}
-	jceId, jceType, idInNexByte := decodeHeadByte(buffer[0])
-	if idInNexByte {
-		_, err := readBuffer.Read(buffer)
-		if err != nil {
-			return 0, err
-		}
-		jceId = buffer[0]
-	}
+	//fmt.Println(jceId, jceType)
 	var jceSectionType string
 	var jceSectionData interface{}
 	if jceType == 0 {
-		jceSectionType, jceSectionData, err = jceSectionType0FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionType0FromBytes(readBuffer)
+		jceSectionType = INT8
 	} else if jceType == 1 {
-		jceSectionType, jceSectionData, err = jceSectionType1FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionType1FromBytes(readBuffer)
+		jceSectionType = INT16
 	} else if jceType == 2 {
-		jceSectionType, jceSectionData, err = jceSectionType2FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionType2FromBytes(readBuffer)
+		jceSectionType = INT32
 	} else if jceType == 3 {
-		jceSectionType, jceSectionData, err = jceSectionType3FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionType3FromBytes(readBuffer)
+		jceSectionType = INT64
 	} else if jceType == 4 {
-		jceSectionType, jceSectionData, err = jceSectionType4FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionType4FromBytes(readBuffer)
+		jceSectionType = FLOAT32
 	} else if jceType == 5 {
-		jceSectionType, jceSectionData, err = jceSectionType5FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionType5FromBytes(readBuffer)
+		jceSectionType = FLOAT64
 	} else if jceType == 6 || jceType == 7 {
-		jceSectionType, jceSectionData, err = jceSectionType6or7FromBytes(readBuffer, jceType)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionStringFromBytes(readBuffer)
+		jceSectionType = STRING
 	} else if jceType == 8 {
-		jceSectionType, jceSectionData, err = jceSectionType8FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionType, jceSectionData = JceSectionType8FromBytes(readBuffer)
 	} else if jceType == 9 {
-		jceSectionType, jceSectionData, err = jceSectionType9FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionType, jceSectionData = JceSectionType9FromBytes(readBuffer)
 	} else if jceType == 10 {
-		var data map[uint8]*JceSection
-		jceSectionType, data, err = jceStructFromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
-		jceSectionData = newJceStruct()
-		jceSectionData.(*JceStruct).structMap = data
+		jceSectionData = NewJceStruct()
+		jceSectionData.(*JceStruct).structMap = jceStructFromBytes(readBuffer)
+		jceSectionType = STRUCT
 	} else if jceType == 11 {
+		readBuffer.SkipHead()
 		jceSectionType = STRUCT_END
 	} else if jceType == 12 {
+		readBuffer.SkipHead()
 		jceSectionType = ZERO_TAG
 	} else if jceType == 13 {
-		jceSectionType, jceSectionData, err = jceSectionType13FromBytes(readBuffer)
-		if err != nil {
-			return 0, err
-		}
+		jceSectionData = JceSectionType13FromBytes(readBuffer)
+		jceSectionType = BYTES
 	} else {
 		return 0, ErrorUnknowJceTypeErr
 	}
