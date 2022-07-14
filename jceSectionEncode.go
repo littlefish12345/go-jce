@@ -166,7 +166,7 @@ func JceSectionZeroTagToBytes(jceId uint8) []byte { //jceType=12
 
 func JceSectionBoolToBytes(jceId uint8, data bool) []byte { //jceType=0 or 12
 	if data {
-		return append(JceSectionEncodeHeadByte(jceId, 1), 0x01)
+		return append(JceSectionEncodeHeadByte(jceId, 0), 0x01)
 	} else {
 		return JceSectionZeroTagToBytes(jceId)
 	}
