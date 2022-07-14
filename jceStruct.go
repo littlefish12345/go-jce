@@ -126,9 +126,9 @@ func Bind(jceStruct *JceStruct, vStruct interface{}) error {
 		}
 		fieldTypeString := fieldType.Type.String()
 		if jceSection, ok = jceStruct.structMap[uint8(jceId)]; !ok {
-			return ErrorJceStructDoesNotMatch
+			continue
 		}
-		//fmt.Println(jceSection.JceType, fieldTypeString)
+		//fmt.Println(jceSection.JceType, jceId, fieldTypeString)
 		if fieldTypeString == reflect.Uint8.String() {
 			if jceSection.JceType == INT8 {
 				valueOfvStruct.Elem().FieldByIndex(fieldType.Index).SetUint(uint64(jceSection.Data.(int8)))
