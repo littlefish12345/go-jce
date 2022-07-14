@@ -223,7 +223,7 @@ func JceSectionType8FromBytes(readBuffer *JceReader) (string, map[interface{}]in
 		if value == nil {
 			return "", nil
 		}
-		mapType = MAPStrBytes
+		mapType = MAPStrMAPStrBytes
 	} else {
 		return "", nil
 	}
