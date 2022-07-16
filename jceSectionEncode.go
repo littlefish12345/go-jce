@@ -133,7 +133,7 @@ func JceSectionListInt64ToBytes(jceId uint8, data []int64) []byte { //jceType=9
 	}
 	buffer.Write(JceSectionInt32ToBytes(0, int32(len(data))))
 	for _, value := range data {
-		buffer.Write(JceSectionInt64ToBytes(1, value))
+		buffer.Write(JceSectionInt64ToBytes(0, value))
 	}
 	return buffer.Bytes()
 }
@@ -147,7 +147,7 @@ func JceSectionListBytesToBytes(jceId uint8, data [][]byte) []byte { //jceType=9
 	}
 	buffer.Write(JceSectionInt32ToBytes(0, int32(len(data))))
 	for _, value := range data {
-		buffer.Write(JceSectionBytesToBytes(1, value))
+		buffer.Write(JceSectionBytesToBytes(0, value))
 	}
 	return buffer.Bytes()
 }

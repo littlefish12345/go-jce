@@ -242,7 +242,7 @@ func Bind(jceStruct *JceStruct, vStruct interface{}) error {
 				return ErrorJceStructDoesNotMatch
 			}
 		} else if fieldTypeString == "[]int64" {
-			if jceSection.JceType == LISTBytes {
+			if jceSection.JceType == LISTInt64 {
 				valueOfvStruct.Elem().FieldByIndex(fieldType.Index).Set(reflect.ValueOf(jceSection.Data.([]int64)))
 			} else if jceSection.JceType == LIST {
 				valueOfvStruct.Elem().FieldByIndex(fieldType.Index).Elem().Set(reflect.Zero(fieldType.Type))
