@@ -122,3 +122,21 @@ func (jceReader *JceReader) SkipToId(jceTargetId uint8) error {
 		jceReader.SkipOneId()
 	}
 }
+
+func (jceReader *JceReader) ReadJceStructByte() ([]byte, error) {
+	_, jceType, err := jceReader.ReadHead()
+	if err != nil {
+		return nil, err
+	}
+	if jceType != 10 {
+		return nil, nil
+	}
+	startPos := jceReader.pointer
+	jceReader.SkipHead()
+	err = jceReader.SkipToStructEnd()
+	if err != nil {
+		return nil, err
+	}
+	endPos := jceReader.pointer
+	return jceReader.data[startPos:endPos], nil
+}

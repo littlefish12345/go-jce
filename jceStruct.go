@@ -101,6 +101,7 @@ func Marshal(vStruct interface{}) (*JceStruct, error) {
 func Unmarshal(data []byte, vStruct interface{}) error {
 	jceStruct := NewJceStruct()
 	err := jceStruct.Decode(data)
+	//fmt.Println(jceStruct)
 	if err != nil {
 		return err
 	}
