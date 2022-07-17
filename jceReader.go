@@ -131,12 +131,12 @@ func (jceReader *JceReader) ReadJceStructByte() ([]byte, error) {
 	if jceType != 10 {
 		return nil, nil
 	}
-	startPos := jceReader.pointer
+	startPos := jceReader.pointer + 1
 	jceReader.SkipHead()
 	err = jceReader.SkipToStructEnd()
 	if err != nil {
 		return nil, err
 	}
-	endPos := jceReader.pointer
+	endPos := jceReader.pointer - 1
 	return jceReader.data[startPos:endPos], nil
 }
