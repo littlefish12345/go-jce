@@ -1,7 +1,5 @@
 package gojce
 
-import "fmt"
-
 func JceSectionType0FromBytes(readBuffer *JceReader) int8 { //jceType=0 int8
 	_, jceType, _ := readBuffer.ReadHead()
 	if jceType != 0 {
@@ -397,7 +395,6 @@ func JceSectionType13FromBytes(readBuffer *JceReader) []byte { //jceType=13 []by
 	readBuffer.SkipHead()
 	readBuffer.SkipHead()
 	length := uint64(JceSectionInt32FromBytes(readBuffer))
-	fmt.Println(length)
 	if length == 0 {
 		return nil
 	}
@@ -410,7 +407,6 @@ func JceSectionType13FromBytes(readBuffer *JceReader) []byte { //jceType=13 []by
 
 func JceSectionBytesFromBytes(readBuffer *JceReader) []byte {
 	_, jceType, _ := readBuffer.ReadHead()
-	fmt.Println(jceType)
 	if jceType == 9 {
 		listType, interfaceList := JceSectionType9FromBytes(readBuffer)
 		if listType != BYTES {
