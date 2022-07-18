@@ -1,5 +1,7 @@
 package gojce
 
+import "fmt"
+
 func JceSectionType0FromBytes(readBuffer *JceReader) int8 { //jceType=0 int8
 	_, jceType, _ := readBuffer.ReadHead()
 	if jceType != 0 {
@@ -325,6 +327,9 @@ func JceSectionType9FromBytes(readBuffer *JceReader) (string, []interface{}) { /
 	} else if JceTypeIsBytes(jceType) {
 		value = JceSectionBytesFromBytes(readBuffer)
 		listType = LISTBytes
+	} else if JceTypeIsInt8(jceType) {
+		value = JceSectionByteFromBytes(readBuffer)
+		listType = BYTES
 	} else {
 		return "", nil
 	}
@@ -336,13 +341,16 @@ func JceSectionType9FromBytes(readBuffer *JceReader) (string, []interface{}) { /
 				return "", nil
 			}
 			value = JceSectionInt64FromBytes(readBuffer)
-			listType = LISTInt64
 		} else if JceTypeIsBytes(jceType) {
 			if listType != LISTBytes {
 				return "", nil
 			}
 			value = JceSectionBytesFromBytes(readBuffer)
-			listType = LISTBytes
+		} else if JceTypeIsInt8(jceType) {
+			if listType != BYTES {
+				return "", nil
+			}
+			value = JceSectionByteFromBytes(readBuffer)
 		} else {
 			return "", nil
 		}
@@ -352,7 +360,7 @@ func JceSectionType9FromBytes(readBuffer *JceReader) (string, []interface{}) { /
 }
 
 func JceSectionListInt64FromBytes(readBuffer *JceReader) []int64 {
-	listType, interfaceList := JceSectionType8FromBytes(readBuffer)
+	listType, interfaceList := JceSectionType9FromBytes(readBuffer)
 	if listType != LISTInt64 {
 		if listType == LIST {
 			return []int64{}
@@ -367,7 +375,7 @@ func JceSectionListInt64FromBytes(readBuffer *JceReader) []int64 {
 }
 
 func JceSectionListBytesFromBytes(readBuffer *JceReader) [][]byte {
-	listType, interfaceList := JceSectionType8FromBytes(readBuffer)
+	listType, interfaceList := JceSectionType9FromBytes(readBuffer)
 	if listType != LISTBytes {
 		if listType == LIST {
 			return [][]byte{}
@@ -389,6 +397,7 @@ func JceSectionType13FromBytes(readBuffer *JceReader) []byte { //jceType=13 []by
 	readBuffer.SkipHead()
 	readBuffer.SkipHead()
 	length := uint64(JceSectionInt32FromBytes(readBuffer))
+	fmt.Println(length)
 	if length == 0 {
 		return nil
 	}
@@ -400,6 +409,22 @@ func JceSectionType13FromBytes(readBuffer *JceReader) []byte { //jceType=13 []by
 }
 
 func JceSectionBytesFromBytes(readBuffer *JceReader) []byte {
+	_, jceType, _ := readBuffer.ReadHead()
+	fmt.Println(jceType)
+	if jceType == 9 {
+		listType, interfaceList := JceSectionType9FromBytes(readBuffer)
+		if listType != BYTES {
+			if listType == LIST {
+				return []byte{}
+			}
+			return nil
+		}
+		var returnList []byte
+		for _, v := range interfaceList {
+			returnList = append(returnList, v.(byte))
+		}
+		return returnList
+	}
 	return JceSectionType13FromBytes(readBuffer)
 }
 
@@ -436,6 +461,13 @@ func (jceSection *JceSection) Decode(readBuffer *JceReader) (uint8, error) {
 		jceSectionType, jceSectionData = JceSectionType8FromBytes(readBuffer)
 	} else if jceType == 9 {
 		jceSectionType, jceSectionData = JceSectionType9FromBytes(readBuffer)
+		if jceSectionType == BYTES {
+			var data []byte
+			for _, byteData := range jceSectionData.([]interface{}) {
+				data = append(data, byteData.(byte))
+			}
+			jceSectionData = data
+		}
 	} else if jceType == 10 {
 		jceSectionData = NewJceStruct()
 		jceSectionData.(*JceStruct).structMap = jceStructFromBytes(readBuffer)
