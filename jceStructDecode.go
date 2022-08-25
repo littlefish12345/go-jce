@@ -17,7 +17,9 @@ func jceStructDecode(readBuffer *JceReader) (map[uint8]*JceSection, error) {
 			return nil, err
 		}
 		if jceSection.JceType != STRUCT && jceSection.JceType != STRUCT_END {
-			jceStruct[jceId] = jceSection
+			if _, ok := jceStruct[jceId]; !ok {
+				jceStruct[jceId] = jceSection
+			}
 		}
 	}
 	return jceStruct, nil
